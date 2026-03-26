@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Maker — NTAprep</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--acc:#16a34a;--acc2:#15803d;--brd:#dedad2;--ink:#0d0c0a;--mut:#6b6860;--bg:#f3f1ec;--panel:#1e1e1e;--panelb:#252525;}
+body{font-family:'DM Sans',sans-serif;background:var(--panel);color:#e0e0e0;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+/* HEADER */
+header{background:#111;border-bottom:1px solid #333;padding:0 16px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.hdr-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#e0e0e0;}
+.hdr-logo span{color:var(--acc);}
+.hdr-actions{display:flex;gap:8px;align-items:center;}
+.hbtn{padding:6px 14px;border-radius:7px;font-size:.78rem;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .2s;}
+.hbtn:hover{opacity:.8;}
+.hbtn-home{background:#333;color:#ccc;}
+.hbtn-launch{background:var(--acc);color:#fff;}
+.hbtn-launch:disabled{opacity:.35;cursor:not-allowed;}
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden;}
+/* LEFT SIDEBAR */
+.sidebar{width:270px;background:#161616;border-right:1px solid #333;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.sb-section{padding:12px 14px;border-bottom:1px solid #2a2a2a;}
+.sb-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#666;margin-bottom:8px;}
+.pdf-upload-btn{width:100%;padding:9px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.pdf-upload-btn:hover{background:var(--acc2);}
+.pdf-info{font-size:.76rem;color:#999;margin-top:6px;line-height:1.5;}
+/* Page nav */
+.page-nav{display:flex;align-items:center;gap:6px;}
+.pnbtn{background:#2a2a2a;border:1px solid #3a3a3a;color:#ccc;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;}
+.pnbtn:hover{background:#333;}
+.page-input{width:48px;background:#2a2a2a;border:1px solid #3a3a3a;color:#ccc;padding:5px;border-radius:6px;font-size:.78rem;text-align:center;font-family:'DM Sans',sans-serif;}
+.page-total{font-size:.75rem;color:#666;}
+/* Zoom */
+.zoom-row{display:flex;align-items:center;gap:8px;}
+.zoom-slider{flex:1;accent-color:var(--acc);}
+.zoom-val{font-size:.75rem;color:#999;min-width:36px;}
+/* Current crop settings */
+.setting-row{margin-bottom:8px;}
+.setting-row label{font-size:.73rem;color:#888;display:block;margin-bottom:3px;}
+.sel-input{width:100%;background:#2a2a2a;border:1px solid #3a3a3a;color:#d0d0d0;padding:7px 10px;border-radius:7px;font-size:.8rem;font-family:'DM Sans',sans-serif;}
+.sel-input:focus{outline:none;border-color:var(--acc);}
+/* Crops list */
+.crops-scroll{flex:1;overflow-y:auto;padding:8px;}
+.crop-item{background:#1e1e1e;border:1px solid #2e2e2e;border-radius:8px;margin-bottom:6px;overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.crop-item:hover{border-color:#444;}
+.crop-item.selected{border-color:var(--acc);}
+.crop-thumb{width:100%;height:56px;object-fit:cover;object-position:top;background:#2a2a2a;display:block;}
+.crop-meta{padding:6px 8px;display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.crop-info{font-size:.7rem;color:#999;}
+.crop-info strong{color:#ccc;font-size:.72rem;}
+.crop-selects{display:flex;gap:4px;}
+.crop-sel{background:#2a2a2a;border:1px solid #3a3a3a;color:#d0d0d0;padding:3px 6px;border-radius:5px;font-size:.7rem;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.crop-del{background:#3a1a1a;border:none;color:#f87171;border-radius:5px;padding:3px 6px;cursor:pointer;font-size:.7rem;}
+.empty-crops{text-align:center;padding:30px 10px;color:#555;font-size:.8rem;line-height:1.7;}
+
+/* MAIN PDF VIEWER */
+.pdf-viewer{flex:1;overflow:auto;background:#525659;display:flex;flex-direction:column;align-items:center;padding:20px;position:relative;}
+#upload-prompt{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:#aaa;}
+#upload-prompt .big-icon{font-size:3.5rem;margin-bottom:1rem;}
+#upload-prompt h2{font-family:'Syne',sans-serif;font-size:1.3rem;margin-bottom:.5rem;color:#ddd;}
+#upload-prompt p{font-size:.83rem;color:#777;max-width:300px;line-height:1.6;}
+.upload-cta{margin-top:1.2rem;background:var(--acc);color:#fff;border:none;padding:11px 24px;border-radius:100px;font-size:.85rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+#pages-container{width:100%;}
+.page-container{position:relative;margin-bottom:24px;display:inline-block;cursor:crosshair;user-select:none;}
+.page-container canvas{display:block;box-shadow:0 4px 24px rgba(0,0,0,.5);border-radius:4px;}
+.page-label{text-align:center;color:rgba(255,255,255,.4);font-size:.72rem;padding:4px 0 12px;}
+/* Drawing rect */
+.drawing-rect{position:absolute;border:2px dashed #facc15;background:rgba(250,204,21,.08);pointer-events:none;z-index:10;}
+/* Crop overlays */
+.crop-box{position:absolute;border:2px solid var(--acc);background:rgba(22,163,74,.1);pointer-events:none;z-index:9;border-radius:2px;}
+.crop-box-label{position:absolute;top:2px;left:3px;background:var(--acc);color:#fff;font-size:.6rem;font-weight:700;padding:1px 5px;border-radius:3px;line-height:1.4;font-family:'Syne',sans-serif;}
+.crop-box.selected-box{border-color:#facc15;background:rgba(250,204,21,.1);}
+
+/* Toolbar */
+.toolbar{background:#111;border-bottom:1px solid #2a2a2a;padding:6px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.toolbar-hint{font-size:.75rem;color:#888;}
+.toolbar-hint span{color:#facc15;font-weight:600;}
+input[type="file"]{display:none;}
+
+/* Scrollbar */
+.pdf-viewer::-webkit-scrollbar{width:6px;}
+.pdf-viewer::-webkit-scrollbar-track{background:#3a3a3a;}
+.pdf-viewer::-webkit-scrollbar-thumb{background:#555;border-radius:3px;}
+.crops-scroll::-webkit-scrollbar{width:4px;}
+.crops-scroll::-webkit-scrollbar-track{background:#1e1e1e;}
+.crops-scroll::-webkit-scrollbar-thumb{background:#333;border-radius:2px;}
+
+/* Right panel */
+.right-panel{width:260px;background:#161616;border-left:1px solid #333;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.rp-head{padding:10px 14px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;justify-content:space-between;}
+.rp-head h3{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;color:#ccc;}
+.crop-count-badge{background:var(--acc);color:#fff;border-radius:100px;padding:2px 8px;font-size:.68rem;font-weight:700;}
+.rp-foot{padding:12px 14px;border-top:1px solid #2a2a2a;display:flex;flex-direction:column;gap:7px;}
+.rp-input{background:#2a2a2a;border:1px solid #3a3a3a;color:#d0d0d0;padding:8px 10px;border-radius:7px;font-size:.8rem;font-family:'DM Sans',sans-serif;width:100%;}
+.rp-input:focus{outline:none;border-color:var(--acc);}
+.launch-btn{background:var(--acc);color:#fff;border:none;border-radius:8px;padding:11px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;transition:opacity .2s;}
+.launch-btn:hover{opacity:.85;}
+.launch-btn:disabled{opacity:.3;cursor:not-allowed;}
+</style>
+</head>
+<body>
+<input type="file" id="pdf-file" accept=".pdf">
+
+<header>
+  <div class="hdr-logo">NTA<span>prep</span> <span style="font-weight:400;font-size:.75rem;color:#666;margin-left:6px">/ Test Maker</span></div>
+  <div class="hdr-actions">
+    <span id="hdr-status" style="font-size:.75rem;color:#666"></span>
+    <button class="hbtn hbtn-home" onclick="location.href='index.html'">← Home</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT: Controls -->
+  <div class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">PDF File</div>
+      <button class="pdf-upload-btn" onclick="document.getElementById('pdf-file').click()">📂 Upload PDF</button>
+      <div class="pdf-info" id="pdf-info">No PDF loaded</div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Navigation</div>
+      <div class="page-nav">
+        <button class="pnbtn" onclick="changePage(-1)">‹</button>
+        <input type="number" class="page-input" id="page-num-input" value="1" min="1" onchange="jumpToPage(this.value)">
+        <span class="page-total" id="page-total">/ 0</span>
+        <button class="pnbtn" onclick="changePage(1)">›</button>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Zoom</div>
+      <div class="zoom-row">
+        <input type="range" class="zoom-slider" id="zoom-slider" min="0.5" max="3" step="0.1" value="1.5" oninput="setZoom(this.value)">
+        <span class="zoom-val" id="zoom-val">1.5×</span>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Next Crop Will Be Assigned</div>
+      <div class="setting-row">
+        <label>Subject</label>
+        <select class="sel-input" id="def-subj">
+          <option value="Physics">⚛ Physics</option>
+          <option value="Chemistry">🧪 Chemistry</option>
+          <option value="Mathematics">∫ Mathematics</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Correct Answer</label>
+        <select class="sel-input" id="def-ans">
+          <option value="0">Option A</option>
+          <option value="1">Option B</option>
+          <option value="2">Option C</option>
+          <option value="3">Option D</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="padding:10px 14px;font-size:.72rem;color:#555;line-height:1.6;background:#111;border-bottom:1px solid #2a2a2a;">
+      💡 <strong style="color:#888">Draw boxes</strong> on the PDF to crop questions. Set subject & correct answer per question in the right panel.
+    </div>
+
+    <div style="padding:10px 14px;">
+      <button onclick="clearAll()" style="width:100%;background:#2a1a1a;border:1px solid #4a2a2a;color:#f87171;border-radius:7px;padding:7px;font-size:.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Clear All Crops</button>
+    </div>
+  </div>
+
+  <!-- CENTER: PDF Viewer -->
+  <div class="pdf-viewer" id="pdf-viewer">
+    <div id="upload-prompt">
+      <div class="big-icon">📄</div>
+      <h2>Upload a PDF to start</h2>
+      <p>Upload any JEE/NEET question paper. Then draw boxes around each question to crop it.</p>
+      <button class="upload-cta" onclick="document.getElementById('pdf-file').click()">📂 Choose PDF File</button>
+    </div>
+    <div id="pages-container" style="display:none"></div>
+  </div>
+
+  <!-- RIGHT: Crops list -->
+  <div class="right-panel">
+    <div class="rp-head">
+      <h3>Cropped Questions</h3>
+      <span class="crop-count-badge" id="crop-count">0</span>
+    </div>
+    <div class="crops-scroll" id="crops-list">
+      <div class="empty-crops">📝 Cropped questions<br>will appear here.<br><br>Draw boxes on the PDF<br>to add questions.</div>
+    </div>
+    <div class="rp-foot">
+      <input type="text" class="rp-input" id="test-name" placeholder="Test name (e.g. JEE Main 2026)">
+      <input type="number" class="rp-input" id="test-dur" placeholder="Duration (minutes)" value="180">
+      <button class="launch-btn" id="launch-btn" disabled onclick="launchTest()">🚀 Launch CBT Test</button>
+    </div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── State ────────────────────────────────────────────────────────────────
+let pdfDoc = null, totalPages = 0, currentPage = 1;
+let zoom = 1.5;
+let crops = []; // {id, page, x, y, w, h, subject, correct, dataURL}
+let nextId = 1;
+let drawing = false, drawStart = {x:0,y:0}, drawDiv = null, drawCanvas = null;
+let selectedCropId = null;
+
+// ── PDF Load ────────────────────────────────────────────────────────────
+document.getElementById('pdf-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setStatus('Loading PDF…');
+  const ab = await file.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({data: ab}).promise;
+  totalPages = pdfDoc.numPages;
+  document.getElementById('pdf-info').textContent = `📄 ${file.name}\n${totalPages} pages`;
+  document.getElementById('page-total').textContent = `/ ${totalPages}`;
+  document.getElementById('page-num-input').max = totalPages;
+  document.getElementById('upload-prompt').style.display = 'none';
+  document.getElementById('pages-container').style.display = 'block';
+  await renderAllPages();
+  setStatus(`${totalPages} pages loaded`);
+});
+
+// ── Render ────────────────────────────────────────────────────────────────
+async function renderAllPages() {
+  const container = document.getElementById('pages-container');
+  container.innerHTML = '';
+  for (let p = 1; p <= totalPages; p++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'page-container';
+    wrap.dataset.page = p;
+    wrap.style.display = 'block';
+    wrap.style.margin = '0 auto 24px';
+    const canvas = document.createElement('canvas');
+    canvas.dataset.page = p;
+    wrap.appendChild(canvas);
+    const lbl = document.createElement('div');
+    lbl.className = 'page-label';
+    lbl.textContent = `Page ${p}`;
+    wrap.appendChild(lbl);
+    container.appendChild(wrap);
+    await renderPage(p, canvas);
+    attachDrawHandlers(wrap, canvas, p);
+    redrawCropBoxes(wrap, p);
+  }
+}
+
+async function renderPage(pageNum, canvas) {
+  const page = await pdfDoc.getPage(pageNum);
+  const vp = page.getViewport({scale: zoom});
+  canvas.width = vp.width;
+  canvas.height = vp.height;
+  await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise;
+  canvas._vp = vp;
+}
+
+async function rerenderAll() {
+  const canvases = document.querySelectorAll('.page-container canvas');
+  for (const canvas of canvases) {
+    const p = parseInt(canvas.dataset.page);
+    await renderPage(p, canvas);
+    redrawCropBoxes(canvas.parentElement, p);
+  }
+}
+
+function setZoom(v) {
+  zoom = parseFloat(v);
+  document.getElementById('zoom-val').textContent = zoom.toFixed(1) + '×';
+  if (pdfDoc) rerenderAll();
+}
+
+function changePage(d) {
+  currentPage = Math.max(1, Math.min(totalPages, currentPage + d));
+  document.getElementById('page-num-input').value = currentPage;
+  scrollToPage(currentPage);
+}
+function jumpToPage(v) {
+  currentPage = Math.max(1, Math.min(totalPages, parseInt(v)||1));
+  scrollToPage(currentPage);
+}
+function scrollToPage(p) {
+  const wrap = document.querySelector(`.page-container[data-page="${p}"]`);
+  if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── Draw Handlers ─────────────────────────────────────────────────────────
+function attachDrawHandlers(wrap, canvas, pageNum) {
+  // Mouse
+  canvas.addEventListener('mousedown', e => startDraw(e, canvas, wrap, pageNum));
+  canvas.addEventListener('mousemove', e => moveDraw(e, canvas));
+  canvas.addEventListener('mouseup', e => endDraw(e, canvas, wrap, pageNum));
+  // Touch
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0], canvas, wrap, pageNum); }, {passive:false});
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); moveDraw(e.touches[0], canvas); }, {passive:false});
+  canvas.addEventListener('touchend', e => { e.preventDefault(); endDraw(e.changedTouches[0], canvas, wrap, pageNum); }, {passive:false});
+}
+
+function clientToCanvas(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * (canvas.width / r.width),
+    y: (e.clientY - r.top) * (canvas.height / r.height),
+    cx: e.clientX - r.left,
+    cy: e.clientY - r.top
+  };
+}
+
+function startDraw(e, canvas, wrap, pageNum) {
+  const pos = clientToCanvas(e, canvas);
+  drawing = true;
+  drawStart = pos;
+  drawCanvas = canvas;
+  drawDiv = document.createElement('div');
+  drawDiv.className = 'drawing-rect';
+  drawDiv.style.cssText = `left:${pos.cx}px;top:${pos.cy}px;width:0;height:0;`;
+  wrap.appendChild(drawDiv);
+}
+
+function moveDraw(e, canvas) {
+  if (!drawing || !drawDiv || drawCanvas !== canvas) return;
+  const pos = clientToCanvas(e, canvas);
+  const r = canvas.getBoundingClientRect();
+  const sx = drawStart.cx, sy = drawStart.cy;
+  const cx = (e.clientX - r.left), cy = (e.clientY - r.top);
+  drawDiv.style.left = Math.min(sx, cx) + 'px';
+  drawDiv.style.top = Math.min(sy, cy) + 'px';
+  drawDiv.style.width = Math.abs(cx - sx) + 'px';
+  drawDiv.style.height = Math.abs(cy - sy) + 'px';
+}
+
+function endDraw(e, canvas, wrap, pageNum) {
+  if (!drawing) return;
+  drawing = false;
+  if (drawDiv) { drawDiv.remove(); drawDiv = null; }
+  drawCanvas = null;
+  const pos = clientToCanvas(e, canvas);
+  const x = Math.min(drawStart.x, pos.x);
+  const y = Math.min(drawStart.y, pos.y);
+  const w = Math.abs(pos.x - drawStart.x);
+  const h = Math.abs(pos.y - drawStart.y);
+  if (w < 15 || h < 15) return;
+  addCrop(canvas, wrap, pageNum, x, y, w, h);
+}
+
+// ── Add Crop ──────────────────────────────────────────────────────────────
+function addCrop(canvas, wrap, pageNum, x, y, w, h) {
+  // Extract image
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  tmp.getContext('2d').drawImage(canvas, x, y, w, h, 0, 0, w, h);
+  const dataURL = tmp.toDataURL('image/jpeg', 0.92);
+
+  const subj = document.getElementById('def-subj').value;
+  const correct = parseInt(document.getElementById('def-ans').value);
+
+  const crop = {id: nextId++, page: pageNum, x, y, w, h, dataURL, subject: subj, correct};
+  crops.push(crop);
+
+  // Auto-increment subject for next crop (Physics → Chem → Maths cycling suggestion)
+  drawCropBox(wrap, canvas, crop);
+  addCropCard(crop);
+  updateCount();
+  setStatus(`${crops.length} question${crops.length>1?'s':''} cropped`);
+}
+
+function drawCropBox(wrap, canvas, crop) {
+  const r = canvas.getBoundingClientRect();
+  const scX = r.width / canvas.width;
+  const scY = r.height / canvas.height;
+  const box = document.createElement('div');
+  box.className = 'crop-box';
+  box.dataset.id = crop.id;
+  box.style.cssText = `left:${crop.x*scX}px;top:${crop.y*scY}px;width:${crop.w*scX}px;height:${crop.h*scY}px;`;
+  const lbl = document.createElement('div');
+  lbl.className = 'crop-box-label';
+  lbl.textContent = 'Q' + crops.indexOf(crop) + 1 + ' · ' + crop.subject.substring(0,3);
+  box.appendChild(lbl);
+  wrap.appendChild(box);
+}
+
+function redrawCropBoxes(wrap, pageNum) {
+  wrap.querySelectorAll('.crop-box').forEach(el => el.remove());
+  const canvas = wrap.querySelector('canvas');
+  crops.filter(c => c.page === pageNum).forEach(crop => drawCropBox(wrap, canvas, crop));
+}
+
+// ── Crop Cards ────────────────────────────────────────────────────────────
+function addCropCard(crop) {
+  const list = document.getElementById('crops-list');
+  if (list.querySelector('.empty-crops')) list.innerHTML = '';
+  const idx = crops.indexOf(crop);
+  const div = document.createElement('div');
+  div.className = 'crop-item';
+  div.dataset.id = crop.id;
+  div.innerHTML = `
+    <img class="crop-thumb" src="${crop.dataURL}" alt="Q${idx+1}">
+    <div class="crop-meta">
+      <div class="crop-info"><strong>Q${idx+1}</strong> · pg ${crop.page}</div>
+      <div class="crop-selects">
+        <select class="crop-sel" onchange="setCropSubj(${crop.id},this.value)">
+          <option value="Physics" ${crop.subject==='Physics'?'selected':''}>P</option>
+          <option value="Chemistry" ${crop.subject==='Chemistry'?'selected':''}>C</option>
+          <option value="Mathematics" ${crop.subject==='Mathematics'?'selected':''}>M</option>
+        </select>
+        <select class="crop-sel" onchange="setCropAns(${crop.id},parseInt(this.value))">
+          <option value="0" ${crop.correct===0?'selected':''}>A</option>
+          <option value="1" ${crop.correct===1?'selected':''}>B</option>
+          <option value="2" ${crop.correct===2?'selected':''}>C</option>
+          <option value="3" ${crop.correct===3?'selected':''}>D</option>
+        </select>
+        <button class="crop-del" onclick="deleteCrop(${crop.id})">✕</button>
+      </div>
+    </div>
+  `;
+  div.addEventListener('click', (e) => {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON') return;
+    selectCrop(crop.id);
+  });
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+  document.getElementById('launch-btn').disabled = false;
+}
+
+function rebuildCropsList() {
+  const list = document.getElementById('crops-list');
+  list.innerHTML = '';
+  if (crops.length === 0) {
+    list.innerHTML = '<div class="empty-crops">📝 Cropped questions<br>will appear here.<br><br>Draw boxes on the PDF<br>to add questions.</div>';
+    document.getElementById('launch-btn').disabled = true;
+    return;
+  }
+  crops.forEach(c => addCropCard(c));
+}
+
+function setCropSubj(id, v) {
+  const c = crops.find(c=>c.id===id); if (c) c.subject = v;
+  redrawAllBoxes();
+}
+function setCropAns(id, v) { const c = crops.find(c=>c.id===id); if (c) c.correct = v; }
+function deleteCrop(id) {
+  crops = crops.filter(c=>c.id!==id);
+  rebuildCropsList();
+  updateCount();
+  redrawAllBoxes();
+}
+function clearAll() {
+  if (!crops.length || confirm('Delete all cropped questions?')) {
+    crops = [];
+    rebuildCropsList();
+    updateCount();
+    redrawAllBoxes();
+  }
+}
+function redrawAllBoxes() {
+  document.querySelectorAll('.page-container').forEach(wrap => {
+    const p = parseInt(wrap.dataset.page);
+    redrawCropBoxes(wrap, p);
+  });
+}
+function selectCrop(id) {
+  selectedCropId = id;
+  document.querySelectorAll('.crop-item').forEach(el => el.classList.toggle('selected', parseInt(el.dataset.id)===id));
+  const c = crops.find(c=>c.id===id);
+  if (c) {
+    const wrap = document.querySelector(`.page-container[data-page="${c.page}"]`);
+    if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
+function updateCount() {
+  document.getElementById('crop-count').textContent = crops.length;
+  document.getElementById('launch-btn').disabled = crops.length === 0;
+}
+function setStatus(msg) { document.getElementById('hdr-status').textContent = msg; }
+
+// ── Launch Test ────────────────────────────────────────────────────────────
+function launchTest() {
+  if (crops.length === 0) return;
+  const testData = {
+    name: document.getElementById('test-name').value || 'JEE Main Mock Test',
+    duration: parseInt(document.getElementById('test-dur').value) || 180,
+    crops: crops.map(c => ({...c}))
+  };
+  // Store in sessionStorage (dataURLs can be large, use sessionStorage)
+  try {
+    sessionStorage.setItem('ntaprep_test', JSON.stringify(testData));
+    window.location.href = 'test.html';
+  } catch(e) {
+    // If too large, split or warn
+    alert('Test data is too large for browser storage. Try cropping fewer questions or use smaller crops.');
+  }
+}
+
+// Handle window resize - redraw boxes
+window.addEventListener('resize', () => {
+  if (pdfDoc) redrawAllBoxes();
+});
+</script>
+</body>
+</html>

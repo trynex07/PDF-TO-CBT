@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBT Test — NTAprep</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --nta:#1a237e;--nta2:#283593;--acc:#1565c0;
+  --green:#2e7d32;--orange:#e65100;--red:#c62828;
+  --bg:#eceae5;--card:#fff;--brd:#d4d1cb;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);overflow:hidden;}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:#1a237e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;text-align:center;}
+#loading h2{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:.5rem;}
+#loading p{font-size:.85rem;opacity:.6;margin-bottom:1.5rem;}
+.ld-bar{width:260px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;overflow:hidden;}
+.ld-fill{height:100%;background:#86efac;border-radius:2px;animation:ldAnim 1.2s ease-in-out infinite;}
+@keyframes ldAnim{0%{width:0;transform:translateX(0)}50%{width:60%}100%{width:100%;transform:translateX(100%)}}
+
+/* ── TEST SCREEN ── */
+#test-screen{display:none;position:fixed;inset:0;flex-direction:column;background:var(--bg);}
+#test-screen.on{display:flex;}
+
+/* Top bar */
+.nta-top{background:var(--nta);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:50px;flex-shrink:0;gap:8px;}
+.nta-left{display:flex;flex-direction:column;}
+.nta-title{font-family:'Syne',sans-serif;font-weight:800;font-size:.92rem;line-height:1.2;}
+.nta-sub{font-size:.68rem;color:rgba(255,255,255,.55);}
+.nta-mid{display:flex;align-items:center;gap:8px;}
+.timer{background:rgba(255,255,255,.12);border-radius:6px;padding:5px 12px;font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;display:flex;align-items:center;gap:6px;}
+.tdot{width:6px;height:6px;border-radius:50%;background:#ff5c5c;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.timer.warn{background:rgba(239,68,68,.25);color:#fca5a5;}
+.top-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:.72rem;font-family:'DM Sans',sans-serif;}
+.top-btn:hover{background:rgba(255,255,255,.2);}
+
+/* Subject tabs */
+.subj-bar{background:var(--nta2);display:flex;padding:0 14px;flex-shrink:0;border-bottom:2px solid rgba(255,255,255,.06);}
+.stab{padding:9px 18px;font-size:.78rem;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;transition:all .2s;margin-bottom:-2px;font-family:'DM Sans',sans-serif;}
+.stab.on{color:#fff;border-bottom-color:#ffeb3b;}
+.stab .sc{display:inline-block;margin-left:5px;background:rgba(255,255,255,.1);border-radius:100px;padding:1px 7px;font-size:.65rem;}
+.stab.on .sc{background:#ffeb3b;color:#1a237e;}
+
+/* Body */
+.test-body{display:flex;flex:1;overflow:hidden;}
+
+/* Question area */
+.q-area{flex:1;overflow-y:auto;padding:16px 20px 16px;background:var(--bg);}
+.q-area::-webkit-scrollbar{width:5px;}
+.q-area::-webkit-scrollbar-track{background:#d4d1cb;}
+.q-area::-webkit-scrollbar-thumb{background:#aaa;border-radius:3px;}
+
+.q-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+.q-id{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:#222;}
+.q-sect{font-size:.7rem;color:#888;margin-top:2px;}
+.q-badges{display:flex;align-items:center;gap:7px;}
+.chip{padding:2px 9px;border-radius:100px;font-size:.68rem;font-weight:600;}
+.chip-pos{background:#e8f5e9;color:#1b5e20;}
+.chip-neg{background:#ffebee;color:#b71c1c;}
+.q-stat{font-size:.7rem;padding:2px 9px;border-radius:100px;font-weight:500;}
+.q-stat.ans{background:#e8f5e9;color:#1b5e20;}
+.q-stat.mrk{background:#fff3e0;color:#bf360c;}
+.q-stat.nv{background:#f5f5f5;color:#777;}
+
+/* Question image */
+.q-img-card{background:#fff;border:1px solid var(--brd);border-radius:10px;padding:12px;margin-bottom:14px;text-align:center;min-height:80px;display:flex;align-items:center;justify-content:center;}
+.q-img-card img{max-width:100%;max-height:340px;object-fit:contain;}
+
+/* Options */
+.opts{display:flex;flex-direction:column;gap:8px;}
+.opt{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1.5px solid #ccc;border-radius:9px;cursor:pointer;background:#fff;transition:all .12s;font-size:.86rem;color:#333;}
+.opt:hover{border-color:var(--acc);background:#f0f4ff;}
+.opt.sel{border-color:var(--acc);background:#e3eafc;color:#1565c0;font-weight:500;}
+.opt.correct{border-color:var(--green)!important;background:#e8f5e9!important;color:#1b5e20!important;font-weight:600!important;}
+.opt.wrong{border-color:var(--red)!important;background:#ffebee!important;color:#b71c1c!important;}
+.opt-circ{width:26px;height:26px;border-radius:50%;border:1.5px solid #aaa;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;transition:all .12s;color:#666;}
+.opt.sel .opt-circ{border-color:var(--acc);color:var(--acc);}
+.opt.correct .opt-circ{border-color:var(--green);color:var(--green);}
+.opt.wrong .opt-circ{border-color:var(--red);color:var(--red);}
+.opt-txt{flex:1;line-height:1.5;}
+
+/* Side palette */
+.pal-side{width:210px;background:#fff;border-left:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.pal-side::-webkit-scrollbar{width:4px;}
+.pal-head{background:var(--nta);color:#fff;padding:10px 12px;font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.3px;}
+.pal-body{flex:1;overflow-y:auto;padding:10px;}
+.pal-body::-webkit-scrollbar{width:4px;}
+.pal-body::-webkit-scrollbar-track{background:#f5f5f5;}
+.pal-body::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+.pal-lbl{font-size:.64rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#999;margin-bottom:6px;}
+.pal-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:12px;}
+.pq{height:27px;border-radius:5px;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;cursor:pointer;background:#fff;color:#666;transition:all .1s;}
+.pq:hover{border-color:var(--acc);}
+.pq.cur{background:var(--acc);color:#fff;border-color:var(--acc);}
+.pq.done{background:var(--green);color:#fff;border-color:var(--green);}
+.pq.rev{background:var(--orange);color:#fff;border-color:var(--orange);}
+.legend{display:flex;flex-direction:column;gap:4px;}
+.leg{display:flex;align-items:center;gap:6px;font-size:.68rem;color:#888;}
+.ldot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+.pal-foot{padding:10px 12px;border-top:1px solid #eee;}
+.summ{display:flex;gap:5px;}
+.sm{flex:1;background:#f8f7f4;border-radius:7px;padding:6px;text-align:center;}
+.sm-n{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;color:var(--nta);}
+.sm-l{font-size:.62rem;color:#aaa;}
+
+/* Bottom bar */
+.test-foot{background:#fff;border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;padding:8px 14px;flex-shrink:0;gap:6px;flex-wrap:wrap;}
+.foot-l{display:flex;gap:6px;}
+.foot-r{display:flex;gap:6px;}
+.tbtn{padding:8px 16px;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .2s;}
+.tbtn:hover{opacity:.8;}
+.tbtn-clear{background:#e8e6e1;color:#444;}
+.tbtn-mark{background:#e65100;color:#fff;}
+.tbtn-prev{background:#546e7a;color:#fff;}
+.tbtn-next{background:var(--acc);color:#fff;}
+.tbtn-sub{background:var(--green);color:#fff;}
+
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center;}
+.overlay.on{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:28px;max-width:380px;width:90%;text-align:center;}
+.m-ico{font-size:2.6rem;margin-bottom:.7rem;}
+.modal h2{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;margin-bottom:.5rem;}
+.modal p{font-size:.83rem;color:#666;line-height:1.6;margin-bottom:1.2rem;}
+.m-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.mbtn{padding:9px 20px;border-radius:100px;font-size:.8rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
+.mbtn-go{background:var(--acc);color:#fff;}
+.mbtn-sub{background:var(--red);color:#fff;}
+.mbtn-cancel{background:#e8e6e1;color:#444;}
+
+/* No data screen */
+#no-data{display:none;position:fixed;inset:0;background:#f3f1ec;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:12px;}
+#no-data h2{font-family:'Syne',sans-serif;font-size:1.4rem;}
+#no-data p{font-size:.88rem;color:#666;max-width:300px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div style="font-size:2.5rem;margin-bottom:1rem">🎓</div>
+  <h2>NTAprep CBT</h2>
+  <p id="ld-msg">Loading test data…</p>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+
+<div id="no-data" style="display:none">
+  <div style="font-size:3rem">📭</div>
+  <h2>No Test Data Found</h2>
+  <p>Please go to the Test Maker, crop your questions, and click "Launch CBT Test".</p>
+  <a href="maker.html" style="background:#1a237e;color:#fff;padding:12px 24px;border-radius:100px;text-decoration:none;font-weight:500;font-size:.88rem;">← Go to Test Maker</a>
+</div>
+
+<div id="test-screen">
+  <div class="nta-top">
+    <div class="nta-left">
+      <div class="nta-title" id="t-name">NTAprep · JEE Main</div>
+      <div class="nta-sub" id="t-sub">Joint Entrance Examination (Main)</div>
+    </div>
+    <div class="nta-mid">
+      <div class="timer" id="timer-box"><div class="tdot"></div><span id="timer">03:00:00</span></div>
+      <button class="top-btn" onclick="goFS()">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <div class="subj-bar" id="subj-bar"></div>
+
+  <div class="test-body">
+    <div class="q-area" id="q-area">
+      <div class="q-hdr">
+        <div>
+          <div class="q-id">Question <span id="q-num">1</span> of <span id="q-tot">0</span></div>
+          <div class="q-sect" id="q-sect">Physics — Section A</div>
+        </div>
+        <div class="q-badges">
+          <span class="chip chip-pos">+4</span>
+          <span class="chip chip-neg">−1</span>
+          <span class="q-stat nv" id="q-stat">Not Visited</span>
+        </div>
+      </div>
+      <div class="q-img-card"><img id="q-img" src="" alt="Question"></div>
+      <div class="opts" id="opts"></div>
+    </div>
+
+    <div class="pal-side">
+      <div class="pal-head">QUESTION PALETTE</div>
+      <div class="pal-body">
+        <div class="pal-lbl" id="pal-lbl">Physics</div>
+        <div class="pal-grid" id="pal-grid"></div>
+        <div class="legend">
+          <div class="leg"><div class="ldot" style="background:var(--green)"></div>Answered</div>
+          <div class="leg"><div class="ldot" style="background:#fff;border:1px solid #ccc"></div>Not Visited</div>
+          <div class="leg"><div class="ldot" style="background:var(--acc)"></div>Current</div>
+          <div class="leg"><div class="ldot" style="background:var(--orange)"></div>Marked</div>
+        </div>
+      </div>
+      <div class="pal-foot">
+        <div style="font-size:.64rem;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600">Summary</div>
+        <div class="summ">
+          <div class="sm"><div class="sm-n" id="s-ans">0</div><div class="sm-l">Done</div></div>
+          <div class="sm"><div class="sm-n" id="s-mrk">0</div><div class="sm-l">Marked</div></div>
+          <div class="sm"><div class="sm-n" id="s-left">0</div><div class="sm-l">Left</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-foot">
+    <div class="foot-l">
+      <button class="tbtn tbtn-clear" onclick="clearAns()">Clear Response</button>
+      <button class="tbtn tbtn-mark" onclick="markRev()">Mark &amp; Next</button>
+    </div>
+    <div class="foot-r">
+      <button class="tbtn tbtn-prev" onclick="prevQ()">← Prev</button>
+      <button class="tbtn tbtn-next" onclick="nextQ()">Save &amp; Next →</button>
+      <button class="tbtn tbtn-sub" onclick="confirmSub()">Submit Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- Warning Modal -->
+<div class="overlay" id="warn-ov">
+  <div class="modal">
+    <div class="m-ico" id="w-ico">⚠️</div>
+    <h2 id="w-title">Exiting Fullscreen!</h2>
+    <p id="w-msg">You have exited fullscreen. In the real NTA exam this is flagged.<br><br><strong>Warning 1 of 2</strong> — one more exit will auto-submit your test.</p>
+    <div class="m-btns">
+      <button class="mbtn mbtn-go" onclick="returnFS()">↩ Return to Fullscreen</button>
+      <button class="mbtn mbtn-sub" onclick="doSubmit()">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Confirm Modal -->
+<div class="overlay" id="sub-ov">
+  <div class="modal">
+    <div class="m-ico">📋</div>
+    <h2>Submit Test?</h2>
+    <p id="sub-msg">Are you sure you want to submit?</p>
+    <div class="m-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeOv('sub-ov')">Continue Test</button>
+      <button class="mbtn mbtn-sub" onclick="doSubmit()">Yes, Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Load test data ────────────────────────────────────────────────────────
+let testData = null;
+let questions = []; // ordered by subject
+let SUBJS = [];
+let answers = {}, marked = new Set();
+let curSubjIdx = 0, curLocalIdx = 0;
+let timerInt = null, timeLeft = 0, warnCount = 0;
+
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    const raw = sessionStorage.getItem('ntaprep_test');
+    if (!raw) throw new Error('no data');
+    testData = JSON.parse(raw);
+    setLdMsg('Organising questions…');
+    setTimeout(initTest, 500);
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('no-data').style.display = 'flex';
+  }
+});
+
+function setLdMsg(m) { document.getElementById('ld-msg').textContent = m; }
+
+function initTest() {
+  // Group by subject in PCM order
+  const order = ['Physics','Chemistry','Mathematics'];
+  const bySubj = {};
+  testData.crops.forEach(c => {
+    if (!bySubj[c.subject]) bySubj[c.subject] = [];
+    bySubj[c.subject].push(c);
+  });
+  SUBJS = order.filter(s => bySubj[s] && bySubj[s].length > 0);
+  questions = [];
+  SUBJS.forEach(s => bySubj[s].forEach((c,i) => questions.push({...c, subject:s, localIdx:i})));
+
+  document.getElementById('t-name').textContent = 'NTAprep · ' + testData.name;
+  document.getElementById('t-sub').textContent = 'Joint Entrance Examination (Main) · Paper 1';
+
+  buildSubjTabs();
+  renderQ();
+  buildPalette();
+  updateSummary();
+  timeLeft = testData.duration * 60;
+  startTimer();
+
+  setLdMsg('Launching…');
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('test-screen').classList.add('on');
+    goFS();
+    listenFS();
+  }, 600);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function getSubjQs(s) { return questions.filter(q => q.subject === s); }
+function getGlobal(subjIdx, localIdx) {
+  let g = 0;
+  for (let i = 0; i < subjIdx; i++) g += getSubjQs(SUBJS[i]).length;
+  return g + localIdx;
+}
+function curGlobal() { return getGlobal(curSubjIdx, curLocalIdx); }
+
+// ── Subject Tabs ───────────────────────────────────────────────────────────
+function buildSubjTabs() {
+  const bar = document.getElementById('subj-bar');
+  bar.innerHTML = '';
+  SUBJS.forEach((s,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'stab' + (i===0?' on':'');
+    btn.id = 'stab-'+i;
+    btn.innerHTML = s + ` <span class="sc" id="sc-${i}">0/${getSubjQs(s).length}</span>`;
+    btn.onclick = () => switchSubj(i);
+    bar.appendChild(btn);
+  });
+}
+function updateTabs() {
+  SUBJS.forEach((s,i) => {
+    const qs = getSubjQs(s);
+    let done = 0;
+    qs.forEach((_,li) => { if (answers[getGlobal(i,li)] !== undefined) done++; });
+    const sc = document.getElementById('sc-'+i);
+    if (sc) sc.textContent = done + '/' + qs.length;
+    const tb = document.getElementById('stab-'+i);
+    if (tb) tb.className = 'stab' + (i===curSubjIdx?' on':'');
+  });
+}
+function switchSubj(i) { curSubjIdx = i; curLocalIdx = 0; renderQ(); buildPalette(); updateTabs(); }
+
+// ── Render Question ────────────────────────────────────────────────────────
+function renderQ() {
+  const subj = SUBJS[curSubjIdx];
+  const qs = getSubjQs(subj);
+  if (!qs || !qs[curLocalIdx]) return;
+  const q = qs[curLocalIdx];
+  const gi = curGlobal();
+  const isA = answers[gi] !== undefined;
+  const isM = marked.has(gi);
+
+  document.getElementById('q-num').textContent = curLocalIdx + 1;
+  document.getElementById('q-tot').textContent = qs.length;
+  document.getElementById('q-sect').textContent = subj + ' — Section A';
+  document.getElementById('q-img').src = q.dataURL;
+
+  const st = document.getElementById('q-stat');
+  st.className = 'q-stat ' + (isA?'ans':isM?'mrk':'nv');
+  st.textContent = isA ? 'Answered' : isM ? 'Marked for Review' : 'Not Visited';
+
+  const og = document.getElementById('opts');
+  og.innerHTML = '';
+  ['A','B','C','D'].forEach((lbl, i) => {
+    const d = document.createElement('div');
+    d.className = 'opt' + (answers[gi]===i?' sel':'');
+    d.innerHTML = `<div class="opt-circ">${lbl}</div><div class="opt-txt">Option ${lbl}</div>`;
+    d.onclick = () => { answers[gi] = i; renderQ(); buildPalette(); updateTabs(); updateSummary(); };
+    og.appendChild(d);
+  });
+
+  buildPalette();
+  document.getElementById('q-area').scrollTop = 0;
+}
+
+// ── Palette ─────────────────────────────────────────────────────────────────
+function buildPalette() {
+  const subj = SUBJS[curSubjIdx];
+  const qs = getSubjQs(subj);
+  const grid = document.getElementById('pal-grid');
+  grid.innerHTML = '';
+  const start = SUBJS.slice(0,curSubjIdx).reduce((a,s)=>a+getSubjQs(s).length,0);
+  document.getElementById('pal-lbl').textContent = subj + ' (' + (start+1) + '–' + (start+qs.length) + ')';
+  qs.forEach((_,i) => {
+    const gi = getGlobal(curSubjIdx, i);
+    const d = document.createElement('div');
+    d.className = 'pq' + (i===curLocalIdx?' cur':answers[gi]!==undefined?' done':marked.has(gi)?' rev':'');
+    d.textContent = i + 1;
+    d.onclick = (()=>{const li=i;return()=>{curLocalIdx=li;renderQ();}})();
+    grid.appendChild(d);
+  });
+}
+
+function updateSummary() {
+  const done = Object.keys(answers).length;
+  document.getElementById('s-ans').textContent = done;
+  document.getElementById('s-mrk').textContent = marked.size;
+  document.getElementById('s-left').textContent = questions.length - done;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function nextQ() {
+  const qs = getSubjQs(SUBJS[curSubjIdx]);
+  if (curLocalIdx < qs.length-1) { curLocalIdx++; renderQ(); buildPalette(); }
+  else if (curSubjIdx < SUBJS.length-1) switchSubj(curSubjIdx+1);
+}
+function prevQ() {
+  if (curLocalIdx > 0) { curLocalIdx--; renderQ(); buildPalette(); }
+  else if (curSubjIdx > 0) { curSubjIdx--; curLocalIdx=getSubjQs(SUBJS[curSubjIdx]).length-1; renderQ(); buildPalette(); updateTabs(); }
+}
+function clearAns() {
+  delete answers[curGlobal()]; renderQ(); buildPalette(); updateTabs(); updateSummary();
+}
+function markRev() {
+  const gi = curGlobal();
+  if (marked.has(gi)) marked.delete(gi); else marked.add(gi);
+  buildPalette(); updateSummary(); nextQ();
+}
+
+// ── Timer ──────────────────────────────────────────────────────────────────
+function startTimer() {
+  if (timerInt) clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) { clearInterval(timerInt); doSubmit(); return; }
+    const h = String(Math.floor(timeLeft/3600)).padStart(2,'0');
+    const m = String(Math.floor((timeLeft%3600)/60)).padStart(2,'0');
+    const s = String(timeLeft%60).padStart(2,'0');
+    document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+    const box = document.getElementById('timer-box');
+    if (timeLeft <= 600) box.classList.add('warn'); else box.classList.remove('warn');
+  }, 1000);
+}
+
+// ── Fullscreen ─────────────────────────────────────────────────────────────
+function goFS() {
+  const el = document.getElementById('test-screen');
+  (el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||function(){}).call(el);
+}
+function listenFS() {
+  document.addEventListener('fullscreenchange', onFSC);
+  document.addEventListener('webkitfullscreenchange', onFSC);
+}
+let fsAutoTimer = null;
+function onFSC() {
+  const inFS = !!(document.fullscreenElement||document.webkitFullscreenElement);
+  const testOn = document.getElementById('test-screen').classList.contains('on');
+  const anyMod = document.getElementById('warn-ov').classList.contains('on') || document.getElementById('sub-ov').classList.contains('on');
+  if (!inFS && testOn && !anyMod) {
+    warnCount++;
+    if (warnCount >= 2) {
+      document.getElementById('w-ico').textContent = '🚨';
+      document.getElementById('w-title').textContent = 'FINAL WARNING!';
+      document.getElementById('w-msg').innerHTML = 'You\'ve exited fullscreen <strong>twice</strong>. Your test auto-submits in <strong>10 seconds</strong> unless you return to fullscreen.';
+      document.getElementById('warn-ov').classList.add('on');
+      fsAutoTimer = setTimeout(() => {
+        if (document.getElementById('warn-ov').classList.contains('on')) { closeOv('warn-ov'); doSubmit(); }
+      }, 10000);
+    } else {
+      document.getElementById('w-ico').textContent = '⚠️';
+      document.getElementById('w-title').textContent = 'Exiting Fullscreen!';
+      document.getElementById('w-msg').innerHTML = 'You have exited fullscreen. In the real NTA exam this is flagged.<br><br><strong>Warning 1 of 2</strong> — one more exit will auto-submit your test.';
+      document.getElementById('warn-ov').classList.add('on');
+    }
+  }
+}
+function returnFS() { closeOv('warn-ov'); if(fsAutoTimer){clearTimeout(fsAutoTimer);fsAutoTimer=null;} goFS(); }
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+function confirmSub() {
+  const done = Object.keys(answers).length;
+  document.getElementById('sub-msg').textContent = `Answered ${done} of ${questions.length}. ${questions.length-done} unanswered. Submit?`;
+  document.getElementById('sub-ov').classList.add('on');
+}
+
+function doSubmit() {
+  clearInterval(timerInt);
+  if(fsAutoTimer){clearTimeout(fsAutoTimer);fsAutoTimer=null;}
+  closeOv('warn-ov'); closeOv('sub-ov');
+
+  // Calculate results
+  let total = 0;
+  const sScore = {}, sCorr = {}, sAns = {}, sTotal = {};
+  SUBJS.forEach(s => { sScore[s]=0; sCorr[s]=0; sAns[s]=0; sTotal[s]=getSubjQs(s).length; });
+  questions.forEach((q,gi) => {
+    if (answers[gi] !== undefined) {
+      sAns[q.subject]++;
+      if (answers[gi] === q.correct) { total+=4; sScore[q.subject]+=4; sCorr[q.subject]++; }
+      else { total-=1; sScore[q.subject]-=1; }
+    }
+  });
+
+  let cor=0,wr=0,sk=0;
+  questions.forEach((q,gi)=>{
+    if(answers[gi]===undefined)sk++;
+    else if(answers[gi]===q.correct)cor++;
+    else wr++;
+  });
+  const tt = testData.duration*60 - timeLeft;
+
+  // Store results for result page
+  sessionStorage.setItem('ntaprep_result', JSON.stringify({
+    name: testData.name, total, maxScore: questions.length*4,
+    cor, wr, sk, tt, sScore, sCorr, sAns, sTotal, SUBJS,
+    questions: questions.map((q,gi)=>({subject:q.subject,correct:q.correct,answered:answers[gi],img:q.dataURL}))
+  }));
+
+  if(document.exitFullscreen)document.exitFullscreen().catch(()=>{});
+  else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+  window.location.href = 'results.html';
+}
+
+function closeOv(id) { document.getElementById(id).classList.remove('on'); }
+</script>
+</body>
+</html>

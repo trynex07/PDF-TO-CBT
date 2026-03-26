@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Results — NTAprep</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--nta:#1a237e;--acc:#1565c0;--green:#2e7d32;--red:#c62828;--bg:#f3f1ec;--brd:#dedad2;--card:#fff;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1a1a1a;min-height:100vh;}
+nav{background:var(--nta);padding:0 5%;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.nlogo{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:#fff;}
+.nlogo span{color:#86efac;}
+.nbtn{background:rgba(255,255,255,.15);color:#fff;padding:7px 14px;border-radius:7px;text-decoration:none;font-size:.78rem;font-weight:500;}
+.nbtn:hover{background:rgba(255,255,255,.25);}
+.inner{max-width:820px;margin:0 auto;padding:40px 5%;}
+.card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,.07);}
+.top{background:linear-gradient(135deg,var(--nta),var(--acc));color:#fff;padding:32px;text-align:center;}
+.test-nm{font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;}
+.top h1{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;}
+.score-big{font-family:'Syne',sans-serif;font-size:3.2rem;font-weight:800;margin:.8rem 0 .2rem;}
+.score-max{font-size:.85rem;opacity:.55;}
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:1rem;}
+.pill{background:rgba(255,255,255,.13);border-radius:100px;padding:5px 13px;font-size:.76rem;font-weight:500;}
+.body{padding:24px;}
+.body h3{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:700;margin-bottom:14px;color:#333;}
+.sbar-row{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+.sbar-name{font-size:.82rem;font-weight:600;color:#666;width:100px;}
+.sbar-wrap{flex:1;background:#f0eeea;border-radius:100px;height:9px;min-width:80px;}
+.sbar-fill{height:9px;border-radius:100px;transition:width 1s ease;}
+.sbar-score{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;color:var(--nta);min-width:55px;text-align:right;}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px;}
+.detail-card{background:#f8f7f4;border-radius:10px;padding:14px;text-align:center;}
+.dc-n{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--nta);}
+.dc-l{font-size:.72rem;color:#888;margin-top:3px;}
+.actions{padding:18px 24px;border-top:1px solid #eee;display:flex;gap:8px;flex-wrap:wrap;}
+.abtn{padding:11px 22px;border-radius:100px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;}
+.abtn-p{background:var(--nta);color:#fff;}
+.abtn-o{background:transparent;color:var(--nta);border:1.5px solid var(--brd);}
+.abtn-o:hover{border-color:var(--nta);}
+/* No data */
+#no-data{text-align:center;padding:80px 20px;}
+#no-data h2{font-family:'Syne',sans-serif;font-size:1.4rem;margin-bottom:.5rem;}
+#no-data p{font-size:.85rem;color:#888;max-width:300px;margin:0 auto .5rem;}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nlogo">NTA<span>prep</span></div>
+  <div style="display:flex;gap:8px">
+    <a class="nbtn" href="maker.html">✂️ New Test</a>
+    <a class="nbtn" href="index.html">🏠 Home</a>
+  </div>
+</nav>
+
+<div class="inner" id="result-content">
+  <div id="no-data" style="display:none">
+    <div style="font-size:3rem;margin-bottom:1rem">📭</div>
+    <h2>No Results Found</h2>
+    <p>Please complete a test first.</p>
+    <a href="maker.html" style="display:inline-block;margin-top:1rem;background:var(--nta);color:#fff;padding:10px 22px;border-radius:100px;text-decoration:none;font-weight:500;font-size:.85rem">← Make a Test</a>
+  </div>
+</div>
+
+<script>
+const raw = sessionStorage.getItem('ntaprep_result');
+if (!raw) {
+  document.getElementById('no-data').style.display = 'block';
+} else {
+  const r = JSON.parse(raw);
+  const clrs = {Physics:'#1565c0', Chemistry:'#2e7d32', Mathematics:'#6a1b9a'};
+  const pct = r.cor + r.wr > 0 ? Math.round(r.cor/(r.cor+r.wr)*100) : 0;
+
+  const html = `
+  <div class="card">
+    <div class="top">
+      <div class="test-nm">${r.name}</div>
+      <h1>Test Submitted ✓</h1>
+      <div class="score-big">${r.total}</div>
+      <div class="score-max">out of ${r.maxScore}</div>
+      <div class="pills">
+        <div class="pill">✅ Correct: <strong>${r.cor}</strong></div>
+        <div class="pill">❌ Wrong: <strong>${r.wr}</strong></div>
+        <div class="pill">⬜ Skipped: <strong>${r.sk}</strong></div>
+        <div class="pill">⏱ Time: <strong>${fmtTime(r.tt)}</strong></div>
+        <div class="pill">🎯 Accuracy: <strong>${pct}%</strong></div>
+      </div>
+    </div>
+    <div class="body">
+      <div class="detail-grid">
+        <div class="detail-card"><div class="dc-n" style="color:var(--green)">${r.cor}</div><div class="dc-l">Correct (+${r.cor*4})</div></div>
+        <div class="detail-card"><div class="dc-n" style="color:var(--red)">${r.wr}</div><div class="dc-l">Wrong (${-r.wr})</div></div>
+        <div class="detail-card"><div class="dc-n" style="color:#888">${r.sk}</div><div class="dc-l">Skipped (0)</div></div>
+        <div class="detail-card"><div class="dc-n">${pct}%</div><div class="dc-l">Accuracy</div></div>
+      </div>
+      <h3>Subject-wise Performance</h3>
+      ${r.SUBJS.map(s => {
+        const max = r.sTotal[s] * 4;
+        const p = max > 0 ? Math.max(0, Math.round(Math.max(0, r.sScore[s]) / max * 100)) : 0;
+        return `
+          <div class="sbar-row">
+            <div class="sbar-name">${s}</div>
+            <div class="sbar-wrap"><div class="sbar-fill" style="width:${p}%;background:${clrs[s]||'#1565c0'}"></div></div>
+            <div class="sbar-score">${r.sScore[s]} / ${max}</div>
+          </div>
+          <div style="font-size:.7rem;color:#aaa;margin:-4px 0 14px 112px">${r.sCorr[s]} correct · ${r.sAns[s]-r.sCorr[s]} wrong · ${r.sTotal[s]-r.sAns[s]} skipped</div>
+        `;
+      }).join('')}
+    </div>
+    <div class="actions">
+      <button class="abtn abtn-p" onclick="retake()">🔄 Retake Test</button>
+      <a class="abtn abtn-o" href="maker.html">✂️ New Test</a>
+      <a class="abtn abtn-o" href="index.html">🏠 Home</a>
+    </div>
+  </div>`;
+  document.getElementById('result-content').innerHTML = html;
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll('.sbar-fill').forEach(el => {
+      const w = el.style.width;
+      el.style.width = '0';
+      setTimeout(() => el.style.width = w, 100);
+    });
+  }, 100);
+}
+
+function fmtTime(s) {
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;
+  return h?`${h}h ${m}m`:`${m}m ${sc}s`;
+}
+
+function retake() {
+  const r = JSON.parse(sessionStorage.getItem('ntaprep_result'));
+  // Re-use same test data
+  sessionStorage.removeItem('ntaprep_result');
+  window.location.href = 'test.html';
+}
+</script>
+</body>
+</html>
